@@ -3,43 +3,46 @@ using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 
-
-namespace YourNamespace 
+namespace YourNamespace
 {
-class Program
-{
+    class Program
+    {
         private static SqlConnection? connection;
         private static SqlCommand? command;
 
-        private static void CreateCommand(string queryFilePath, string connectionString)
-{
-    string queryString = File.ReadAllText(queryFilePath);
+        private static void CreateCommand(string[] queryFilePaths, string connectionString)
+        {
+            using (connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
 
-    using (connection = new SqlConnection(connectionString))
-    {
-        command  = new SqlCommand(queryString, connection);
-        connection.Open();
-         try
+                foreach (string queryFilePath in queryFilePaths)
                 {
-                    int rowsAffected = command.ExecuteNonQuery();
-                    Console.WriteLine("Query executed successfully. Rows affected: " + rowsAffected);
+                    string queryString = File.ReadAllText(queryFilePath);
+                    command = new SqlCommand(queryString, connection);
+
+                    try
+                    {
+                        int rowsAffected = command.ExecuteNonQuery();
+                        Console.WriteLine("Query executed successfully. Rows affected: " + rowsAffected);
+                    }
+                    catch (SqlException ex)
+                    {
+                        Console.WriteLine("Error executing query: " + ex.Message);
+                    }
                 }
-                catch (SqlException ex)
-                {
-                    Console.WriteLine("Error executing query: " + ex.Message );
-                }
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            string[] queryFilePaths = {
+                @"C:\Users\Cosmin\Desktop\SQLQuery1.sql",
+                @"C:\Users\Cosmin\Desktop\SQLQuery2.sql"
+            };
+            string connectionString = @"Data Source=DESKTOP-N8PKN5D\MSSQLSERVER2023;Initial Catalog=Automatic queries;Integrated Security=True";
+
+            CreateCommand(queryFilePaths, connectionString);
+        }
     }
-}
-    static void Main(string[] args) {
-
-        // Insert the path here
-
-        string queryFilePath = @"C:\Users\Cosmin\Desktop\SQLQuery.sql";
-
-        // Insert the connection string here
-
-        string connectionString = @"Data Source=DESKTOP-N8PKN5D\MSSQLSERVER2023;Initial Catalog=Automatic queries;Integrated Security=True";
-        CreateCommand(queryFilePath, connectionString);
-    }
-}
 }
